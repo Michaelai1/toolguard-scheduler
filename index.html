@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NextGen | Dispatch Board</title>
+  <link rel="stylesheet" href="style.css">
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    
+    // Simple icon components using SVG
+    const CalendarIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+    );
+    
+    const UsersIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+    );
+    
+    const WrenchIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+      </svg>
+    );
+    
+    const BriefcaseIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+      </svg>
+    );
+    
+    const EditIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+      </svg>
+    );
+    
+    const XIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    );
+    
+    const UserPlusIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="8.5" cy="7" r="4"></circle>
+        <line x1="20" y1="8" x2="20" y2="14"></line>
+        <line x1="23" y1="11" x2="17" y2="11"></line>
+      </svg>
+    );
+    
+    const PlusIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    );
+    
+    const LockIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+    );
+
+    // Crews Data
+    const mockCrews = [
+      { 
+        id: 'crew-a', 
+        name: 'Crew A', 
+        type: 'crew',
+        foreman: 'Bob',
+        phone: '(555) 123-4567',
+        members: ['Joe', 'Bill']
+      },
+      { 
+        id: 'crew-b', 
+        name: 'Crew B', 
+        type: 'crew',
+        foreman: 'Steve',
+        phone: '(555) 234-5678',
+        members: ['Tom', 'Dave', 'Rick']
+      },
+    ];
+
+    // Equipment Data
+    const mockEquipment = [
+      { id: 'equip-1', name: 'CAT 305 Excavator', type: 'equipment' },
+      { id: 'equip-2', name: 'Genie Lift', type: 'equipment' },
+      { id: 'equip-3', name: 'Trailer #4', type: 'equipment' },
+      { id: 'equip-4', name: 'Bulldozer D6', type: 'equipment' },
+      { id: 'equip-5', name: 'Compactor Roller', type: 'equipment' },
+      { id: 'equip-6', name: 'Forklift 5000', type: 'equipment' },
+    ];
+
+    // Location Columns
+    const locations = [
+      { id: 'shop', name: 'Shop / Available' },
+      { 
+        id: 'downtown', 
+        name: 'Downtown Highrise',
+        address: '1500 Commerce St, Downtown, ST 12345',
+        startDate: '2024-01-15',
+        projectType: 'Commercial Construction'
+      },
+      { 
+        id: 'westside', 
+        name: 'Westside Hospital',
+        address: '456 Medical Center Dr, Westside, ST 67890',
+        startDate: '2024-01-20',
+        projectType: 'Healthcare Facility'
+      },
+      { 
+        id: 'maintenance', 
+        name: 'Maintenance',
+        address: 'Various Locations',
+        startDate: 'Ongoing',
+        projectType: 'Maintenance & Repairs'
+      },
+    ];
+
+    // Login Component
+    const Login = ({ onLogin }) => {
+      const [password, setPassword] = useState('');
+      const [error, setError] = useState('');
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (password === '1234') {
+          setError('');
+          onLogin();
+        } else {
+          setError('Incorrect password. Please try again.');
+          setPassword('');
+        }
+      };
+
+      return (
+        <div className="login-container">
+          <div className="login-box">
+            <div className="login-title">
+              <div style={{ 
+                fontSize: '3rem', 
+                fontWeight: 'bold', 
+                color: '#3b82f6', 
+                marginBottom: '0.5rem',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.2)'
+              }}>
+                NextGen
+              </div>
+              <p style={{ fontSize: '1.1rem', color: '#4b5563', marginBottom: '0.5rem' }}>
+                Dispatch Board
+              </p>
+              <div style={{ 
+                width: '60px', 
+                height: '4px', 
+                backgroundColor: '#3b82f6', 
+                margin: '0 auto',
+                borderRadius: '2px'
+              }}></div>
+            </div>
+            <form onSubmit={handleSubmit} className="login-form">
+              <div className="form-group">
+                <label htmlFor="password" className="form-label">
+                  <LockIcon size={16} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'middle' }} />
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError('');
+                  }}
+                  className="form-input"
+                  placeholder="Enter password"
+                  autoFocus
+                />
+              </div>
+              {error && <div className="error">{error}</div>}
+              <button type="submit" className="btn btn-primary" style={{ 
+                fontSize: '1rem',
+                padding: '0.75rem',
+                marginTop: '0.5rem'
+              }}>
+                Access Dashboard
+              </button>
+              <div style={{ 
+                marginTop: '1.5rem', 
+                paddingTop: '1.5rem', 
+                borderTop: '1px solid #e5e7eb',
+                textAlign: 'center',
+                fontSize: '0.875rem',
+                color: '#6b7280'
+              }}>
+                <div style={{ marginBottom: '0.5rem' }}>🔒 Secure Login Required</div>
+                <div>Site Scheduler © 2024</div>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    };
+
+    // Navigation Component
+    const Navigation = ({ activeTab, onTabChange }) => {
+      const tabs = [
+        { id: 'dispatch', label: 'Dispatch Board', icon: CalendarIcon },
+        { id: 'crews', label: 'Crew Management', icon: UsersIcon },
+        { id: 'equipment', label: 'Equipment', icon: WrenchIcon },
+        { id: 'jobs', label: 'Active Jobs', icon: BriefcaseIcon },
+      ];
+
+      return (
+        <nav className="nav">
+          <div className="nav-content">
+            <div className="logo">NextGen | Dispatch Board</div>
+            <div className="nav-tabs">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => onTabChange(tab.id)}
+                    className={`nav-tab ${activeTab === tab.id ? 'active' : ''}`}
+                  >
+                    <Icon size={18} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </nav>
+      );
+    };
+
+
+    // Dispatch Board Component (Kanban Style)
+    const DispatchBoard = () => {
+      const [crewAssignments, setCrewAssignments] = useState({
+        shop: ['crew-a', 'crew-b'],
+        downtown: [],
+        westside: [],
+        maintenance: [],
+      });
+
+      const [equipmentAssignments, setEquipmentAssignments] = useState({
+        shop: ['equip-1', 'equip-2', 'equip-4', 'equip-6'],
+        downtown: ['equip-3'],
+        westside: [],
+        maintenance: ['equip-5'],
+      });
+      
+      const [draggedResource, setDraggedResource] = useState(null);
+      const [dragOverColumn, setDragOverColumn] = useState(null);
+      const [selectedCrew, setSelectedCrew] = useState(null);
+      const [isCrewModalOpen, setIsCrewModalOpen] = useState(false);
+
+      const getCrewInfo = (crewId) => {
+        return mockCrews.find((c) => c.id === crewId);
+      };
+
+      const getEquipmentInfo = (equipId) => {
+        return mockEquipment.find((e) => e.id === equipId);
+      };
+
+      // Get crews assigned to each location
+      const getCrewsInLocation = (locationId) => {
+        return (crewAssignments[locationId] || []).map(crewId => getCrewInfo(crewId)).filter(Boolean);
+      };
+
+      // Get equipment assigned to each location
+      const getEquipmentInLocation = (locationId) => {
+        return (equipmentAssignments[locationId] || []).map(equipId => getEquipmentInfo(equipId)).filter(Boolean);
+      };
+
+      const handleDragStart = (e, resourceId) => {
+        setDraggedResource(resourceId);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', resourceId);
+        e.currentTarget.style.opacity = '0.5';
+      };
+
+      const handleDragEnd = (e) => {
+        e.currentTarget.style.opacity = '1';
+      };
+
+      const handleDragOver = (e, locationId) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        setDragOverColumn(locationId);
+      };
+
+      const handleDragLeave = () => {
+        setDragOverColumn(null);
+      };
+
+      const handleDrop = (e, locationId) => {
+        e.preventDefault();
+        const resourceId = e.dataTransfer.getData('text/plain') || draggedResource;
+        
+        if (resourceId) {
+          const isCrew = mockCrews.some(c => c.id === resourceId);
+          const isEquipment = mockEquipment.some(e => e.id === resourceId);
+          
+          if (isCrew) {
+            // Remove crew from all locations first
+            const newCrewAssignments = { ...crewAssignments };
+            Object.keys(newCrewAssignments).forEach(loc => {
+              newCrewAssignments[loc] = newCrewAssignments[loc].filter(id => id !== resourceId);
+            });
+            
+            // Add crew to new location
+            if (!newCrewAssignments[locationId]) {
+              newCrewAssignments[locationId] = [];
+            }
+            newCrewAssignments[locationId].push(resourceId);
+            
+            setCrewAssignments(newCrewAssignments);
+          } else if (isEquipment) {
+            // Remove equipment from all locations first
+            const newEquipmentAssignments = { ...equipmentAssignments };
+            Object.keys(newEquipmentAssignments).forEach(loc => {
+              newEquipmentAssignments[loc] = newEquipmentAssignments[loc].filter(id => id !== resourceId);
+            });
+            
+            // Add equipment to new location
+            if (!newEquipmentAssignments[locationId]) {
+              newEquipmentAssignments[locationId] = [];
+            }
+            newEquipmentAssignments[locationId].push(resourceId);
+            
+            setEquipmentAssignments(newEquipmentAssignments);
+          }
+        }
+        setDraggedResource(null);
+        setDragOverColumn(null);
+      };
+
+      const removeCrewAssignment = (locationId, crewId) => {
+        const newCrewAssignments = { ...crewAssignments };
+        newCrewAssignments[locationId] = newCrewAssignments[locationId].filter(id => id !== crewId);
+        // Move back to shop
+        if (!newCrewAssignments.shop) {
+          newCrewAssignments.shop = [];
+        }
+        newCrewAssignments.shop.push(crewId);
+        setCrewAssignments(newCrewAssignments);
+      };
+
+      const removeEquipmentAssignment = (locationId, equipId) => {
+        const newEquipmentAssignments = { ...equipmentAssignments };
+        newEquipmentAssignments[locationId] = newEquipmentAssignments[locationId].filter(id => id !== equipId);
+        // Move back to shop
+        if (!newEquipmentAssignments.shop) {
+          newEquipmentAssignments.shop = [];
+        }
+        newEquipmentAssignments.shop.push(equipId);
+        setEquipmentAssignments(newEquipmentAssignments);
+      };
+
+      const shopCrews = getCrewsInLocation('shop');
+      const shopEquipment = getEquipmentInLocation('shop');
+      
+      return (
+        <div style={{ height: 'calc(100vh - 64px)', display: 'flex', overflow: 'hidden' }}>
+          {/* Left Sidebar - Shop / Available */}
+          <div style={{
+            width: '280px',
+            backgroundColor: '#f9fafb',
+            borderRight: '1px solid #e5e7eb',
+            padding: '1rem',
+            overflowY: 'auto'
+          }}>
+            <h2 style={{
+              fontSize: '1.125rem',
+              fontWeight: 600,
+              color: '#1f2937',
+              marginBottom: '1rem',
+              paddingBottom: '0.75rem',
+              borderBottom: '2px solid #3b82f6'
+            }}>
+              Shop / Available
+            </h2>
+            
+            {/* Crews Section */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h3 style={{
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: '#374151',
+                marginBottom: '0.75rem'
+              }}>
+                Crews ({shopCrews.length})
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {shopCrews.map((crew) => (
+                  <div
+                    key={crew.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, crew.id)}
+                    onDragEnd={handleDragEnd}
+                    style={{
+                      backgroundColor: 'white',
+                      padding: '0.75rem',
+                      borderRadius: '0.375rem',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                      borderLeft: '3px solid #3b82f6',
+                      borderTop: '1px solid #e5e7eb',
+                      borderRight: '1px solid #e5e7eb',
+                      borderBottom: '1px solid #e5e7eb',
+                      cursor: 'move',
+                      userSelect: 'none',
+                      transition: 'all 0.2s',
+                      position: 'relative'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                      <div style={{ fontWeight: 500, color: '#1f2937', fontSize: '0.875rem', flex: 1 }}>
+                        {crew.name}
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCrew(crew);
+                          setIsCrewModalOpen(true);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#3b82f6',
+                          cursor: 'pointer',
+                          padding: '0.25rem',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                        title="Edit Crew"
+                      >
+                        <EditIcon size={14} />
+                      </button>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280', lineHeight: '1.5' }}>
+                      <div><strong>Foreman:</strong> {crew.foreman || 'N/A'}</div>
+                      <div><strong>Phone:</strong> {crew.phone || 'N/A'}</div>
+                      <div style={{ marginTop: '0.25rem' }}>
+                        <strong>Crew:</strong> {crew.members && crew.members.length > 0 ? crew.members.join(', ') : 'None'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {shopCrews.length === 0 && (
+                  <div style={{ 
+                    padding: '0.75rem', 
+                    color: '#9ca3af', 
+                    fontSize: '0.875rem',
+                    fontStyle: 'italic',
+                    textAlign: 'center'
+                  }}>
+                    All crews assigned
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Equipment Section */}
+            <div>
+              <h3 style={{
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: '#374151',
+                marginBottom: '0.75rem'
+              }}>
+                Equipment ({shopEquipment.length})
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {shopEquipment.map((equip) => (
+                  <div
+                    key={equip.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, equip.id)}
+                    onDragEnd={handleDragEnd}
+                    style={{
+                      backgroundColor: 'white',
+                      padding: '0.75rem',
+                      borderRadius: '0.375rem',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                      borderLeft: '3px solid #3b82f6',
+                      borderTop: '1px solid #e5e7eb',
+                      borderRight: '1px solid #e5e7eb',
+                      borderBottom: '1px solid #e5e7eb',
+                      cursor: 'move',
+                      userSelect: 'none',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'}
+                  >
+                    <div style={{ fontWeight: 500, color: '#1f2937', fontSize: '0.875rem' }}>
+                      {equip.name}
+                    </div>
+                  </div>
+                ))}
+                {shopEquipment.length === 0 && (
+                  <div style={{ 
+                    padding: '0.75rem', 
+                    color: '#9ca3af', 
+                    fontSize: '0.875rem',
+                    fontStyle: 'italic',
+                    textAlign: 'center'
+                  }}>
+                    All equipment assigned
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Main Area - Location Columns */}
+          <div style={{
+            flex: 1,
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            backgroundColor: '#f3f4f6',
+            padding: '1rem'
+          }}>
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              height: '100%',
+              minWidth: 'fit-content'
+            }}>
+              {locations.filter(loc => loc.id !== 'shop').map((location) => {
+                const crewsInLocation = getCrewsInLocation(location.id);
+                const equipmentInLocation = getEquipmentInLocation(location.id);
+                const isDragOver = dragOverColumn === location.id;
+                
+                return (
+                  <div
+                    key={location.id}
+                    onDragOver={(e) => handleDragOver(e, location.id)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, location.id)}
+                    style={{
+                      width: '300px',
+                      minWidth: '300px',
+                      backgroundColor: isDragOver ? '#dbeafe' : 'white',
+                      borderRadius: '0.5rem',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      border: isDragOver ? '2px dashed #3b82f6' : '1px solid #e5e7eb',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {/* Location Header */}
+                    <div style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid #e5e7eb',
+                      backgroundColor: '#1f2937',
+                      borderTopLeftRadius: '0.5rem',
+                      borderTopRightRadius: '0.5rem'
+                    }}>
+                      <h3 style={{
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        color: '#3b82f6',
+                        margin: '0 0 0.5rem 0'
+                      }}>
+                        {location.name}
+                      </h3>
+                      {location.address && (
+                        <div style={{
+                          fontSize: '0.75rem',
+                          color: '#9ca3af',
+                          marginBottom: '0.25rem',
+                          lineHeight: '1.4'
+                        }}>
+                          📍 {location.address}
+                        </div>
+                      )}
+                      {location.startDate && (
+                        <div style={{
+                          fontSize: '0.75rem',
+                          color: '#9ca3af',
+                          marginBottom: '0.25rem'
+                        }}>
+                          📅 Start: {location.startDate}
+                        </div>
+                      )}
+                      {location.projectType && (
+                        <div style={{
+                          fontSize: '0.75rem',
+                          color: '#9ca3af'
+                        }}>
+                          🏗️ {location.projectType}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Assigned Resources */}
+                    <div style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      overflowY: 'auto',
+                      minHeight: '200px',
+                      backgroundColor: isDragOver ? '#dbeafe' : 'transparent',
+                      transition: 'background-color 0.2s'
+                    }}>
+                      {/* Crews Section */}
+                      <div style={{ marginBottom: '1rem' }}>
+                        <div style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 500,
+                          color: '#6b7280',
+                          marginBottom: '0.5rem'
+                        }}>
+                          Crews ({crewsInLocation.length})
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          {crewsInLocation.map((crew) => (
+                            <div
+                              key={crew.id}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, crew.id)}
+                              onDragEnd={handleDragEnd}
+                              style={{
+                                backgroundColor: 'white',
+                                borderLeft: '3px solid #3b82f6',
+                                borderTop: '1px solid #e5e7eb',
+                                borderRight: '1px solid #e5e7eb',
+                                borderBottom: '1px solid #e5e7eb',
+                                borderRadius: '0.375rem',
+                                padding: '0.75rem',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                cursor: 'move',
+                                transition: 'all 0.2s',
+                                position: 'relative'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)'}
+                              onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                                <div style={{
+                                  fontWeight: 500,
+                                  color: '#1f2937',
+                                  fontSize: '0.875rem'
+                                }}>
+                                  {crew.name}
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedCrew(crew);
+                                      setIsCrewModalOpen(true);
+                                    }}
+                                    style={{
+                                      background: 'none',
+                                      border: 'none',
+                                      color: '#3b82f6',
+                                      cursor: 'pointer',
+                                      padding: '0.25rem',
+                                      display: 'flex',
+                                      alignItems: 'center'
+                                    }}
+                                    title="Edit Crew"
+                                  >
+                                    <EditIcon size={14} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      removeCrewAssignment(location.id, crew.id);
+                                    }}
+                                    style={{
+                                      background: 'none',
+                                      border: 'none',
+                                      color: '#6b7280',
+                                      cursor: 'pointer',
+                                      fontSize: '1.25rem',
+                                      lineHeight: 1,
+                                      padding: 0
+                                    }}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: '#6b7280', lineHeight: '1.5' }}>
+                                <div><strong>Foreman:</strong> {crew.foreman || 'N/A'}</div>
+                                <div><strong>Phone:</strong> {crew.phone || 'N/A'}</div>
+                                <div style={{ marginTop: '0.25rem' }}>
+                                  <strong>Crew:</strong> {crew.members && crew.members.length > 0 ? crew.members.join(', ') : 'None'}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Equipment Section */}
+                      <div>
+                        <div style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 500,
+                          color: '#6b7280',
+                          marginBottom: '0.5rem'
+                        }}>
+                          Equipment ({equipmentInLocation.length})
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          {equipmentInLocation.map((equip) => (
+                            <div
+                              key={equip.id}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, equip.id)}
+                              onDragEnd={handleDragEnd}
+                              style={{
+                                backgroundColor: 'white',
+                                borderLeft: '3px solid #3b82f6',
+                                borderTop: '1px solid #e5e7eb',
+                                borderRight: '1px solid #e5e7eb',
+                                borderBottom: '1px solid #e5e7eb',
+                                borderRadius: '0.375rem',
+                                padding: '0.75rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                cursor: 'move',
+                                transition: 'all 0.2s'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)'}
+                              onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+                            >
+                              <div style={{
+                                fontWeight: 500,
+                                color: '#1f2937',
+                                fontSize: '0.875rem'
+                              }}>
+                                {equip.name}
+                              </div>
+                              <button
+                                onClick={() => removeEquipmentAssignment(location.id, equip.id)}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: '#6b7280',
+                                  cursor: 'pointer',
+                                  fontSize: '1.25rem',
+                                  lineHeight: 1,
+                                  padding: 0,
+                                  marginLeft: '0.5rem'
+                                }}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Empty State */}
+                      {crewsInLocation.length === 0 && equipmentInLocation.length === 0 && (
+                        <div style={{
+                          padding: '2rem',
+                          textAlign: 'center',
+                          color: '#9ca3af',
+                          fontSize: '0.875rem',
+                          fontStyle: 'italic',
+                          border: '2px dashed #e5e7eb',
+                          borderRadius: '0.375rem',
+                          marginTop: '1rem'
+                        }}>
+                          Drop crews or equipment here
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Edit Crew Modal */}
+          {isCrewModalOpen && selectedCrew && (
+            <EditCrewModal
+              crew={selectedCrew}
+              isOpen={isCrewModalOpen}
+              onClose={() => {
+                setIsCrewModalOpen(false);
+                setSelectedCrew(null);
+              }}
+              onSave={(updatedCrew) => {
+                const crewIndex = mockCrews.findIndex(c => c.id === updatedCrew.id);
+                if (crewIndex !== -1) {
+                  mockCrews[crewIndex] = updatedCrew;
+                }
+                setIsCrewModalOpen(false);
+                setSelectedCrew(null);
+                // Force re-render by updating assignments
+                setCrewAssignments({ ...crewAssignments });
+              }}
+            />
+          )}
+        </div>
+      );
+    };
+
+    // Edit Crew Modal
+    const EditCrewModal = ({ crew, isOpen, onClose, onSave }) => {
+      const [foreman, setForeman] = useState('');
+      const [phone, setPhone] = useState('');
+      const [members, setMembers] = useState('');
+
+      useEffect(() => {
+        if (crew) {
+          setForeman(crew.foreman || '');
+          setPhone(crew.phone || '');
+          setMembers(crew.members ? crew.members.join(', ') : '');
+        }
+      }, [crew]);
+
+      if (!isOpen || !crew) return null;
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        onSave({
+          ...crew,
+          foreman,
+          phone,
+          members: members.split(',').map(m => m.trim()).filter(m => m.length > 0)
+        });
+        onClose();
+      };
+
+      return (
+        <div className="modal-overlay" onClick={onClose}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Edit {crew.name}</h2>
+              <button onClick={onClose} className="modal-close"><XIcon size={24} /></button>
+            </div>
+            <form onSubmit={handleSubmit} className="modal-body">
+              <div className="form-group">
+                <label className="form-label">Foreman Name</label>
+                <input
+                  type="text"
+                  value={foreman}
+                  onChange={(e) => setForeman(e.target.value)}
+                  className="form-input"
+                  placeholder="Enter foreman name"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Phone Number</label>
+                <input
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="form-input"
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Crew Members (comma-separated)</label>
+                <input
+                  type="text"
+                  value={members}
+                  onChange={(e) => setMembers(e.target.value)}
+                  className="form-input"
+                  placeholder="Joe, Bill, Tom"
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+                <button type="submit" className="btn btn-primary">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    };
+
+    // Crew Management Component
+    const CrewManagement = () => {
+      const [selectedCrew, setSelectedCrew] = useState(null);
+      const [isCrewModalOpen, setIsCrewModalOpen] = useState(false);
+
+      return (
+        <div className="view-container">
+          <div className="view-header">
+            <h2 className="view-title">Crew Management</h2>
+            <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center' }}>
+              <UserPlusIcon size={20} style={{ marginRight: '0.5rem' }} />
+              Add Crew
+            </button>
+          </div>
+          <div className="card-grid">
+            {mockCrews.map((crew) => (
+              <div key={crew.id} className="info-card">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <UsersIcon size={24} style={{ color: '#3b82f6' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 className="card-title">{crew.name}</h3>
+                    <p className="card-subtitle">Active Crew</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedCrew(crew);
+                      setIsCrewModalOpen(true);
+                    }}
+                    className="edit-btn"
+                    title="Edit Crew"
+                  >
+                    <EditIcon size={18} />
+                  </button>
+                </div>
+                <div className="card-info">
+                  <div className="card-info-row">
+                    <span>Status:</span>
+                    <span className="status-active">Active</span>
+                  </div>
+                  <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
+                    <div style={{ marginBottom: '0.75rem' }}>
+                      <div style={{ marginBottom: '0.25rem', fontWeight: 600, color: '#1f2937' }}>
+                        Foreman: <span style={{ color: '#3b82f6', fontWeight: 700 }}>{crew.foreman || 'N/A'}</span>
+                      </div>
+                      <div style={{ fontSize: '0.875rem', color: '#6b7280', marginLeft: '0.5rem' }}>
+                        📞 {crew.phone || 'N/A'}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: '#4b5563' }}>
+                      <div style={{ marginBottom: '0.5rem', fontWeight: 500 }}>Crew Members:</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        {crew.members && crew.members.length > 0 ? (
+                          crew.members.map((member, idx) => (
+                            <span key={idx} style={{
+                              backgroundColor: '#dbeafe',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '0.25rem',
+                              fontSize: '0.75rem',
+                              color: '#1f2937'
+                            }}>
+                              {member}
+                            </span>
+                          ))
+                        ) : (
+                          <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>No members assigned</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="card-footer">
+                  <button
+                    onClick={() => {
+                      setSelectedCrew(crew);
+                      setIsCrewModalOpen(true);
+                    }}
+                    className="card-link"
+                  >
+                    Edit Details
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Edit Crew Modal */}
+          {isCrewModalOpen && selectedCrew && (
+            <EditCrewModal
+              crew={selectedCrew}
+              isOpen={isCrewModalOpen}
+              onClose={() => {
+                setIsCrewModalOpen(false);
+                setSelectedCrew(null);
+              }}
+              onSave={(updatedCrew) => {
+                const crewIndex = mockCrews.findIndex(c => c.id === updatedCrew.id);
+                if (crewIndex !== -1) {
+                  mockCrews[crewIndex] = updatedCrew;
+                }
+                setIsCrewModalOpen(false);
+                setSelectedCrew(null);
+              }}
+            />
+          )}
+        </div>
+      );
+    };
+
+    // Equipment Component
+    const Equipment = () => {
+      return (
+        <div className="view-container">
+          <div className="view-header">
+            <h2 className="view-title">Equipment</h2>
+            <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center' }}>
+              <PlusIcon size={20} style={{ marginRight: '0.5rem' }} />
+              Add Equipment
+            </button>
+          </div>
+          <div className="card-grid">
+            {mockEquipment.map((equip) => (
+              <div key={equip.id} className="info-card">
+                <div className="card-header">
+                    <div className="card-icon">
+                      <WrenchIcon size={24} style={{ color: '#3b82f6' }} />
+                    </div>
+                  <div>
+                    <h3 className="card-title">{equip.name}</h3>
+                    <p className="card-subtitle">Equipment</p>
+                  </div>
+                </div>
+                <div className="card-info">
+                  <div className="card-info-row">
+                    <span>Status:</span>
+                    <span className="status-available">Available</span>
+                  </div>
+                </div>
+                <div className="card-footer">
+                  <button className="card-link">View Details</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // Active Jobs Component
+    const ActiveJobs = () => {
+      const locations = [
+        { id: 'downtown', name: 'Downtown Highrise', toolsCount: 1 },
+        { id: 'westside', name: 'Westside Hospital', toolsCount: 0 },
+        { id: 'maintenance', name: 'Maintenance', toolsCount: 1 },
+      ];
+
+      return (
+        <div className="view-container">
+          <div className="view-header">
+            <h2 className="view-title">Active Locations</h2>
+            <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center' }}>
+              <BriefcaseIcon size={20} style={{ marginRight: '0.5rem' }} />
+              Add Location
+            </button>
+          </div>
+          <div className="card-grid">
+            {locations.map((location) => (
+              <div key={location.id} className="info-card">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <BriefcaseIcon size={24} style={{ color: '#3b82f6' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 className="card-title">{location.name}</h3>
+                    <p className="card-subtitle" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                      Active Site
+                    </p>
+                  </div>
+                </div>
+                <div className="card-info">
+                  <div className="card-info-row">
+                    <span>Tools Assigned:</span>
+                    <span style={{ fontWeight: 500 }}>{location.toolsCount}</span>
+                  </div>
+                  <div className="card-info-row">
+                    <span>Status:</span>
+                    <span className="status-active">Active</span>
+                  </div>
+                </div>
+                <div className="card-footer">
+                  <button className="card-link">
+                    View Details
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // Main App Component
+    const App = () => {
+      const [isAuthenticated, setIsAuthenticated] = useState(false);
+      const [activeTab, setActiveTab] = useState('dispatch');
+
+      const handleLogin = () => {
+        setIsAuthenticated(true);
+      };
+
+      const renderContent = () => {
+        switch (activeTab) {
+          case 'dispatch':
+            return <DispatchBoard />;
+          case 'crews':
+            return <CrewManagement />;
+          case 'equipment':
+            return <Equipment />;
+          case 'jobs':
+            return <ActiveJobs />;
+          default:
+            return <DispatchBoard />;
+        }
+      };
+
+      if (!isAuthenticated) {
+        return <Login onLogin={handleLogin} />;
+      }
+
+      return (
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f4f6' }}>
+          <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            {renderContent()}
+          </div>
+        </div>
+      );
+    };
+
+    // Render App - wait for DOM to be ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderApp);
+    } else {
+      renderApp();
+    }
+    
+    function renderApp() {
+      const rootElement = document.getElementById('root');
+      if (rootElement && React && ReactDOM) {
+        try {
+          const root = ReactDOM.createRoot(rootElement);
+          root.render(React.createElement(App));
+        } catch (error) {
+          console.error('Error rendering app:', error);
+          rootElement.innerHTML = '<div style="padding: 20px; color: red;">Error loading application. Please check the browser console.</div>';
+        }
+      }
+    }
+  </script>
+</body>
+</html>
